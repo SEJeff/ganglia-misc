@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <head>
 <title>Ganglia: Metric <?php if (isset($_GET['g'])) echo $_GET['g']; else echo $_GET['m']; ?></title>
@@ -8,22 +8,8 @@
   margin: 0 0 10px 10px;
 }
 </style>
-</head>
-<body>
-<?php
 
-if ( isset($_GET['mobile'])) {
-?>
-    <div data-role="page" class="ganglia-mobile" id="view-home">
-    <div data-role="header">
-      <a href="#" class="ui-btn-left" data-icon="arrow-l" onclick="history.back(); return false">Back</a>
-      <h3><?php if (isset($_GET['g'])) echo $_GET['g']; else echo $_GET['m']; ?></h3>
-      <a href="#mobile-home">Home</a>
-    </div>
-    <div data-role="content">
 <?php
-}
-
 $query_string = "";
 
 // build a query string but drop r and z since those designate time window and size. Also if the 
@@ -64,6 +50,30 @@ else if (isset($_GET['aggregate']) )
 else
   $description = "Unknown";
 
+if ( isset($_GET['flot'])) {
+?>
+<style>
+.flotgraph {
+  height: 300px;
+  width:  600px;
+}
+</style>
+<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="js/excanvas.compiled.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="js/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="js/jquery.flot.js"></script>
+
+<script type="text/javascript">
+  var default_time = 'hour';
+  var metric = "<?php if (isset($_GET['g'])) echo $_GET['g']; else echo $_GET['m']; ?>";
+  var base_url = "<?php print 'graph.php?' . $_GET['m'] . $query_string ?>" + "&r=" + default_time;
+</script>
+<script type="text/javascript" src="js/create-flot-graphs.js"></script>
+<?php
+}
+?>
+</head>
+<body>
+<?php
 // Skip printing the 
 if ( ! isset($_GET['aggregate'] )  ) {
 ?>
@@ -74,12 +84,15 @@ if ( ! isset($_GET['aggregate'] )  ) {
 include_once "./eval_conf.php";
 
 foreach ( $conf['time_ranges'] as $key => $value ) {
-
-  print '<div class="img_view">' .
-  '<a href="./graph.php?r=' . $key . $query_string .'&csv=1"><img alt="Export to CSV" height=16 width=16 src="img/csv.png"></a> ' .
-  '<a href="./graph.php?r=' . $key . $query_string .'&json=1"><img alt="Export to JSON" height=16 width=16 src="img/js.png"></a>' .
-  '<br /><a href="./graph.php?r=' . $key . '&z=' . $xlargesize . $query_string . '"><img alt="Last ' . $key . '" src="graph.php?r=' . $key . '&z=' . $largesize . $query_string . '"></a></div>';
-
+    print '<div class="img_view">' .
+    '<a href="./graph.php?r=' . $key . $query_string .'&csv=1"><img alt="Export to CSV" height=16 width=16 src="img/csv.png"></a> ' .
+    '<a href="./graph.php?r=' . $key . $query_string .'&json=1"><img alt="Export to JSON" height=16 width=16 src="img/js.png"></a>' . '<br />';
+  if ( isset($_GET['flot'])) {
+    print '<div id="placeholder_' . $key . '" class="flotgraph img_view"></div>';
+  } else {
+    print '<a href="./graph.php?r=' . $key . '&z=' . $xlargesize . $query_string . '"><img alt="Last ' . $key . '" src="graph.php?r=' . $key . '&z=' . $largesize . $query_string . '"></a>';
+  }
+	print '</div>';
 }
 // The div below needs to be added to clear float left since in aggregate view things
 // will start looking goofy
